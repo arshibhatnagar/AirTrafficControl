@@ -1,0 +1,20 @@
+CS 5412 Architecture Considerations:
+  Tier 1:
+    -> Implement as a microservice
+    -> Explore implementing batch APIs for CRUD (Not easy to do)
+    -> Use asynchronous requests to communicate with other microservices using urlfetch or tasklets
+    -> Bundle writes to Datastore (this is key)
+    -> Try using memcache somehow - come up with a caching strategy
+    -> Need excellent response time - think about instance managing strategies
+    -> Route requests to instances to load balance (to mimic region ATCs) 
+
+  Datastore:
+    -> Provides scalability and durability by distributing data over many machines and using masterless, synchronous replication over a wide geographic area
+    -> Tradeoff is that the write throughput for any single entity group is one commit per second
+    -> Have to decide what the entities and kinds are going to be.
+    -> Need to figure out consistency requirements. Datastore queries can be configured to have strong consistencies or be eventually consistent.
+    -> Need to figure out to use transactions or not
+
+  Tier 2:
+    -> Implement as a microservice
+    -> 
