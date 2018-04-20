@@ -1,2 +1,4 @@
+*.pyc
+ATC/env/
 .DS_Store
 ATC/lib/
