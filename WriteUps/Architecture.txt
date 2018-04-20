@@ -6,7 +6,7 @@ CS 5412 Architecture Considerations:
     -> Bundle writes to Datastore (this is key)
     -> Try using memcache somehow - come up with a caching strategy
     -> Need excellent response time - think about instance managing strategies
-    -> Route requests to instances to load balance (to mimic region ATCs) 
+    -> Route requests to instances to load balance (to mimic region ATCs)
 
   Datastore:
     -> Provides scalability and durability by distributing data over many machines and using masterless, synchronous replication over a wide geographic area
@@ -18,3 +18,8 @@ CS 5412 Architecture Considerations:
   Tier 2:
     -> Implement as a microservice
     -> 
+
+Questions for Ken:
+  -> Is it okay to use automated features, and deal with the constraints that they bring along?
+  -> Do we use a model where we have some instances dedicated to an area or no?
+  -> Any other resources we could look at for architecture inspiration?
