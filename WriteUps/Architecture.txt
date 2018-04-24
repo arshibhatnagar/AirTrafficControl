@@ -17,9 +17,15 @@ CS 5412 Architecture Considerations:
 
   Tier 2:
     -> Implement as a microservice
-    -> 
+    -> Reads in flight plans and current flight locations from Datastore every 10 minutes
+    -> Calculates next waypoint for all flights
+    -> Stores that data back into Datastore, and some cache (figure out optimal caching policy)
+    -> Asynchronously calls on other micro services to help with this calculation
+    -> Use cron jobs to schedule the calculation job every 10 minutes or so
 
 Questions for Ken:
   -> Is it okay to use automated features, and deal with the constraints that they bring along?
   -> Do we use a model where we have some instances dedicated to an area or no?
   -> Any other resources we could look at for architecture inspiration?
+  -> Can we assume that the response sent to the flight includes a key to be used with the application?
+  -> How can we push updates from all instances in one-second intervals? Can we use a global queue with locking?

@@ -67,3 +67,5 @@ def incoming_flight_data():
 
     # Look into using get_or_insert
     # Want to do this batched
+    # Want to check cache
+    # Want to communicate with tier 2 to get the data for the flight
