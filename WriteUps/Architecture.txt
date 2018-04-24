@@ -19,7 +19,7 @@ CS 5412 Architecture Considerations:
     -> Implement as a microservice
     -> Reads in flight plans and current flight locations from Datastore every 10 minutes
     -> Calculates next waypoint for all flights
-    -> Stores that data back into Datastore, and some cache (figure out optimal caching policy)
+    -> Stores that data back into Datastore, and some cache (figure out optimal caching policy). Tier 1 uses this cache to deliver the next waypoint. On a miss, it goes into the datastore.
     -> Asynchronously calls on other micro services to help with this calculation
     -> Use cron jobs to schedule the calculation job every 10 minutes or so
 
