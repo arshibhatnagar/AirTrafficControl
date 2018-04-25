@@ -1,4 +1,5 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, jsonify
+from models import Flight, FlightWaypoints
 from google.appengine.ext import ndb
 
 app = Flask(__name__)
@@ -48,6 +49,10 @@ def update_or_insert(flight_key, flight):
     else:
         flight.put()
 
+def retrieve_next_data(flight_waypoints_key):
+    fetched = flight_key.get()
+    return {"Waypoint": fetched.next_waypoint, "Speed": fetched.next_speed, "Altitude": fetched.next_altitude}
+
 @app.route('/flight', methods=['POST'])
 def incoming_flight_data():
     JSON = request.json
@@ -62,8 +67,13 @@ def incoming_flight_data():
         altitude=altitude, speed=speed, temperature=temperature)
     flight.key = flight_key
 
-    # update_or_insert(flight_key, flight)
-    update_or_insert_tasklet(flight_key, flight)
+    update_or_insert(flight_key, flight)
+    # update_or_insert_tasklet(flight_key, flight)
+
+    flight_waypoints_key = ndb.Key(FlightWaypoints, flight_num)
+    data = retrieve_next_data(flight_waypoints_key)
+
+    return jsonify(data)
 
     # Look into using get_or_insert
     # Want to do this batched
