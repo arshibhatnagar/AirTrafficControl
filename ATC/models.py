@@ -32,5 +32,13 @@ class FlightWaypoints(ndb.Model):
     next_speed = ndb.IntegerProperty()
     next_altitude = ndb.IntegerProperty()
 
+class Route(ndb.Model):
+    waypoints = ndb.GeoPtProperty(repeated=True)
+
+class Routes(ndb.Model):
+    origin = ndb.StringProperty()
+    destination = ndb.StringProperty()
+    num_routes = ndb.IntegerProperty()
+    routes = ndb.StructuredProperty(Route, repeated=True)
 
     
