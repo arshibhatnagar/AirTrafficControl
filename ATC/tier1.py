@@ -3,9 +3,17 @@ from models import Flight, FlightWaypoints
 from google.appengine.ext import ndb
 
 app = Flask(__name__)
+app.debug=True
 
 @app.route('/')
 def hello_world():
+    print "Hello"
+    new_flight = FlightWaypoints(flight_num="AA1234", 
+        next_waypoint=ndb.GeoPt(42.234, -56.345), 
+        next_speed=123, next_altitude=345)
+    AA1234 = ndb.Key(FlightWaypoints, "AA1234")
+    new_flight.key = AA1234
+    new_flight.put()
     return 'Hello, World! This is a test!'
 
 @ndb.toplevel
@@ -55,6 +63,7 @@ def retrieve_next_data(flight_waypoints_key):
 
 @app.route('/flight', methods=['POST'])
 def incoming_flight_data():
+    print "in flight"
     JSON = request.json
     flight_num = JSON.get('flight_num')
     latitude = JSON.get('latitude')
@@ -63,14 +72,17 @@ def incoming_flight_data():
     speed = JSON.get('speed')
     temperature = JSON.get('temperature')
     flight_key = ndb.Key(Flight, flight_num)
-    flight = Flight(flight_num=flight_num, latitude=latitude, longitude=longitude, 
+    flight = Flight(flight_num=flight_num, location=ndb.GeoPt(latitude, longitude), 
         altitude=altitude, speed=speed, temperature=temperature)
     flight.key = flight_key
+
+    # data = {'flight_num': "flight_num", "latitude": 43.578, "longitude": -64.341, "altitude": 123, "speed": 123, "temperature": 32.4}
 
     update_or_insert(flight_key, flight)
     # update_or_insert_tasklet(flight_key, flight)
 
     flight_waypoints_key = ndb.Key(FlightWaypoints, flight_num)
+    print flight_waypoints_key.pairs()
     data = retrieve_next_data(flight_waypoints_key)
 
     return jsonify(data)

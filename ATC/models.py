@@ -9,6 +9,9 @@ class Flight(ndb.Model):
     location = ndb.GeoPtProperty()
     temperature = ndb.FloatProperty()
 
+class Route(ndb.Model):
+    waypoints = ndb.GeoPtProperty(repeated=True)
+    
 # Stores flight plans. This data does not change much.
 class FlightPlan(ndb.Model):
     key = ndb.KeyProperty()
@@ -33,12 +36,9 @@ class FlightWaypoints(ndb.Model):
     next_speed = ndb.IntegerProperty()
     next_altitude = ndb.IntegerProperty()
 
-class Route(ndb.Model):
-    waypoints = ndb.GeoPtProperty(repeated=True)
-
 class Routes(ndb.Model):
     origin = ndb.StringProperty()
     destination = ndb.StringProperty()
     num_routes = ndb.IntegerProperty()
-    routes = ndb.StructuredProperty(Route, repeated=True)
+    # routes = ndb.StructuredProperty(Route, repeated=True)
     
