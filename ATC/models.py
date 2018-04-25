@@ -12,7 +12,17 @@ class Flight(ndb.Model):
 # Stores flight plans. This data does not change much.
 class FlightPlan(ndb.Model):
     key = ndb.KeyProperty()
+    #flight number should be a mixture of carrier code and number - will be used as key
+    #to get all other attributes of the flight
     flight_num = ndb.StringProperty()
+    origin = ndb.StringProperty()
+    dest = ndb.StringProperty()
+    #can combine date and time to make date time property for dep and arr
+    dep_time = ndb.DateTimeProperty()
+    arr_time = ndb.DateTimeProperty()
+    cancelled = ndb.BooleanProperty()
+    carrier = ndb.StringProperty()
+
 
 # Stores the next waypoint for the flight to go to
 class FlightWaypoints(ndb.Model):
@@ -21,4 +31,6 @@ class FlightWaypoints(ndb.Model):
     next_waypoint = ndb.GeoPtProperty()
     next_speed = ndb.IntegerProperty()
     next_altitude = ndb.IntegerProperty()
+
+
     
