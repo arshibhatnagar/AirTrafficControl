@@ -50,7 +50,7 @@ def update_or_insert(flight_key, flight):
         flight.put()
 
 def retrieve_next_data(flight_waypoints_key):
-    fetched = flight_key.get()
+    fetched = flight_waypoints_key.get()
     return {"Waypoint": fetched.next_waypoint, "Speed": fetched.next_speed, "Altitude": fetched.next_altitude}
 
 @app.route('/flight', methods=['POST'])

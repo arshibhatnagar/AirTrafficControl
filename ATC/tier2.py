@@ -27,20 +27,38 @@ def waypoint_updates():
             last_page = False
         flight_plan_keys = [ndb.Key(FlightPlan, flight.flight_num) for flight in results]
         flight_plans = ndb.get_multi(flight_plan_keys)
-        flights = [ndb.Key(Flight, flight.flight_num) for flight in results]
+        flight_keys = [ndb.Key(Flight, flight.flight_num) for flight in results]
+        flights = ndb.get_multi(flight_keys)
 
         # TODO: COMPUTE new_flight_parameters TO TELL US WHAT THE NEXT WAYPOINT, SPEED AND ALTITUDE ARE
-
+        new_flight_parameters = [flight.location for flight in flights]
 
         # flight_plan_future = ndb.get_multi_async(flights)
         # flight_plans = flight_plan_future.get_result()
         # Do async microservice calls here using an rpc created by urlfetch
+        # Assuming a new flight parameters list is obtained from the microservice, for now just creating new_parameters
+
         for i in range(len(results)):
-            flight = results[i]
-            new_parameters = new_flight_parameters[i] # Assuming a new flight parameters list is obtained from the microservice
-            flight.next_waypoint = new_parameters['next_waypoint']
-            flight.next_altitude = new_parameters['next_altitude']
-            flight.next_speed = new_parameters['next_speed']
+            flight_waypoints = results[i]
+            flight = flights[i]
+            flight_plan = flight_plans[i]
+
+            # Let altitude and speed remain as is right now. Will have to change later
+            new_parameters = {'next_waypoint': flight_waypoints.next_waypoint, 'next_altitude': flight.altitude, 'next_speed': flight.speed}
+
+            # Update next waypoint if the currently assigned waypoint has been reached
+            if flight.location.lat == flight_waypoints.next_waypoint.lat and flight.location.lon == flight_waypoints.next_waypoint.lon:
+                for index in range(len(flight_plan.current_route)):
+                    if (flight.location.lat == flight_plan.current_route[index].lat and flight.location.lon == flight_plan.current_route[index].lon):
+                        if index == len(flight_plan.current_route) - 1:
+                            new_parameters['next_waypoint'] = None
+                        else:
+                            new_parameters['next_waypoint'] = flight_plan.current_route[index+1]
+
+            
+            flight_waypoints.next_waypoint = new_parameters['next_waypoint']
+            flight_waypoints.next_altitude = new_parameters['next_altitude']
+            flight_waypoints.next_speed = new_parameters['next_speed']
 
         ndb.put_multi([result.key for result in results])
         # put_future = ndb.put_multi_async(results)

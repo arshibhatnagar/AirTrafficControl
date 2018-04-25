@@ -22,6 +22,7 @@ class FlightPlan(ndb.Model):
     arr_time = ndb.DateTimeProperty()
     cancelled = ndb.BooleanProperty()
     carrier = ndb.StringProperty()
+    current_route = ndb.StructuredProperty(Route)
 
 
 # Stores the next waypoint for the flight to go to
@@ -40,5 +41,4 @@ class Routes(ndb.Model):
     destination = ndb.StringProperty()
     num_routes = ndb.IntegerProperty()
     routes = ndb.StructuredProperty(Route, repeated=True)
-
     
