@@ -35,6 +35,9 @@ class FlightWaypoints(ndb.Model):
     next_waypoint = ndb.GeoPtProperty()
     next_speed = ndb.IntegerProperty()
     next_altitude = ndb.IntegerProperty()
+    flight_plan_urlsafe = ndb.StringProperty()
+    flight_urlsafe = ndb.StringProperty()
+    current_route_index = ndb.IntegerProperty()
 
 class Routes(ndb.Model):
     origin = ndb.StringProperty()

@@ -25,9 +25,9 @@ def waypoint_updates():
     while (more or last_page):
         if (last_page):
             last_page = False
-        flight_plan_keys = [ndb.Key(FlightPlan, flight.flight_num) for flight in results]
+        flight_plan_keys = [ndb.Key(urlsafe=flight.flight_plan_urlsafe) for flight in results]
         flight_plans = ndb.get_multi(flight_plan_keys)
-        flight_keys = [ndb.Key(Flight, flight.flight_num) for flight in results]
+        flight_keys = [ndb.Key(urlsafe=flight.flight_urlsafe) for flight in results]
         flights = ndb.get_multi(flight_keys)
 
         # TODO: COMPUTE new_flight_parameters TO TELL US WHAT THE NEXT WAYPOINT, SPEED AND ALTITUDE ARE
