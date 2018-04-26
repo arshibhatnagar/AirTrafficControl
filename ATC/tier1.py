@@ -5,6 +5,8 @@ from google.appengine.ext import ndb
 app = Flask(__name__)
 app.debug=True
 
+flight_update_list = []
+
 @app.route('/')
 def hello_world():
     # print "Hello"
@@ -71,6 +73,26 @@ def update_or_insert(flight, flight_key_urlsafe):
     # else:
     #     return flight.put()
 
+def push_updates():
+    global flight_update_list
+    # print "IN PUSH"
+    # print "LEN OF FLIGHT_UPDATE_LIST IS: " + str(len(flight_update_list))
+    if (len(flight_update_list) >= 10):
+        # print "PUSHING UPDATES"
+        new_flights, urlsafes = map(list, zip(*flight_update_list))
+        flight_keys = [ndb.Key(urlsafe=urlsafe) for urlsafe in urlsafes]
+        flights = ndb.get_multi(flight_keys)
+        for index in range(len(flights)):
+            flight = flights[index]
+            new_flight = new_flights[index]
+            flight.location = new_flight.location
+            flight.altitude = new_flight.altitude
+            flight.speed = new_flight.speed
+            flight.temperature = new_flight.temperature
+        ndb.put_multi(flights)
+        flight_update_list = []
+
+
 def retrieve_next_data(flight_waypoints_key_urlsafe):
     flight_waypoints_key = ndb.Key(urlsafe=flight_waypoints_key_urlsafe)
     fetched = flight_waypoints_key.get()
@@ -78,6 +100,7 @@ def retrieve_next_data(flight_waypoints_key_urlsafe):
 
 @app.route('/flight', methods=['POST'])
 def incoming_flight_data():
+    global flight_update_list
     # print "in flight"
     JSON = request.json
     flight_num = JSON.get('flight_num')
@@ -86,30 +109,41 @@ def incoming_flight_data():
     altitude = JSON.get('altitude')
     speed = JSON.get('speed')
     temperature = JSON.get('temperature')
+
+    flight = Flight(flight_num=flight_num, location=ndb.GeoPt(latitude, longitude), 
+        altitude=altitude, speed=speed, temperature=temperature)
+
     flight_key_urlsafe = None
     flight_waypoints_key_urlsafe = JSON.get('flight_waypoints_key_urlsafe') # CHANGE THIS
     if 'flight_key_urlsafe' in JSON:
         flight_key_urlsafe = JSON.get('flight_key_urlsafe')
         flight_waypoints_key_urlsafe = JSON.get('flight_waypoints_key_urlsafe')
+    
+    data = retrieve_next_data(flight_waypoints_key_urlsafe)
+    if flight_key_urlsafe is None:
+        flight_key = update_or_insert(flight, flight_key_urlsafe)
+        flight_key_urlsafe_to_send = flight_key.urlsafe()
+        data['flight_key_urlsafe'] = flight_key_urlsafe_to_send
+
+    else:
+        # print "APPENDING"
+        flight_update_list.append((flight, flight_key_urlsafe))
+    push_updates()
+
         
     # flight_key = ndb.Key(Flight, flight_num)
     # print "Flight key is: "
-    flight = Flight(flight_num=flight_num, location=ndb.GeoPt(latitude, longitude), 
-        altitude=altitude, speed=speed, temperature=temperature)
+    
     # flight.key = flight_key
 
     # data = {'flight_num': "flight_num", "latitude": 43.578, "longitude": -64.341, "altitude": 123, "speed": 123, "temperature": 32.4}
-
-    flight_key = update_or_insert(flight, flight_key_urlsafe)
+        
     
     # update_or_insert_tasklet(flight_key, flight)
 
     # flight_waypoints_key = ndb.Key(FlightWaypoints, flight_num)
     # print flight_waypoints_key.pairs()
-    data = retrieve_next_data(flight_waypoints_key_urlsafe)
-    if flight_key_urlsafe is None:
-        flight_key_urlsafe_to_send = flight_key.urlsafe()
-        data['flight_key_urlsafe'] = flight_key_urlsafe_to_send
+    
 
     return jsonify(data)
 
