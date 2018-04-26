@@ -1,11 +1,16 @@
 from flask import Flask, render_template, request, jsonify
 from models import Flight, FlightWaypoints
 from google.appengine.ext import ndb
+from threading import Condition
 
 app = Flask(__name__)
 app.debug=True
 
 flight_update_list = []
+update_cv = Condition()
+updating = False
+
+# TRYING TO DO BATCHING
 
 @app.route('/')
 def hello_world():
@@ -75,9 +80,12 @@ def update_or_insert(flight, flight_key_urlsafe):
 
 def push_updates():
     global flight_update_list
+    global updating
     # print "IN PUSH"
     # print "LEN OF FLIGHT_UPDATE_LIST IS: " + str(len(flight_update_list))
-    if (len(flight_update_list) >= 10):
+    update_cv.acquire()
+    if (len(flight_update_list) >= 30):
+        updating = True
         # print "PUSHING UPDATES"
         new_flights, urlsafes = map(list, zip(*flight_update_list))
         flight_keys = [ndb.Key(urlsafe=urlsafe) for urlsafe in urlsafes]
@@ -91,6 +99,9 @@ def push_updates():
             flight.temperature = new_flight.temperature
         ndb.put_multi(flights)
         flight_update_list = []
+        updating = False
+        update_cv.notify_all()
+    update_cv.release()
 
 
 def retrieve_next_data(flight_waypoints_key_urlsafe):
@@ -101,6 +112,8 @@ def retrieve_next_data(flight_waypoints_key_urlsafe):
 @app.route('/flight', methods=['POST'])
 def incoming_flight_data():
     global flight_update_list
+    global updating
+    global update_cv
     # print "in flight"
     JSON = request.json
     flight_num = JSON.get('flight_num')
@@ -126,8 +139,13 @@ def incoming_flight_data():
         data['flight_key_urlsafe'] = flight_key_urlsafe_to_send
 
     else:
+        update_cv.acquire()
+        while (updating):
+            update_cv.wait()
         # print "APPENDING"
         flight_update_list.append((flight, flight_key_urlsafe))
+        update_cv.release()
+
     push_updates()
 
         
