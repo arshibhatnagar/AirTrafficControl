@@ -2,7 +2,7 @@ from google.appengine.ext import ndb
 
 # Stores the current position of the flight
 class Flight(ndb.Model):
-    key = ndb.KeyProperty()
+    # key = ndb.KeyProperty()
     flight_num = ndb.StringProperty()
     altitude = ndb.IntegerProperty()
     speed = ndb.IntegerProperty()
@@ -11,10 +11,10 @@ class Flight(ndb.Model):
 
 class Route(ndb.Model):
     waypoints = ndb.GeoPtProperty(repeated=True)
-    
+
 # Stores flight plans. This data does not change much.
 class FlightPlan(ndb.Model):
-    key = ndb.KeyProperty()
+    # key = ndb.KeyProperty()
     #flight number should be a mixture of carrier code and number - will be used as key
     #to get all other attributes of the flight
     flight_num = ndb.StringProperty()
@@ -30,7 +30,7 @@ class FlightPlan(ndb.Model):
 
 # Stores the next waypoint for the flight to go to
 class FlightWaypoints(ndb.Model):
-    key = ndb.KeyProperty()
+    # key = ndb.KeyProperty()
     flight_num = ndb.StringProperty()
     next_waypoint = ndb.GeoPtProperty()
     next_speed = ndb.IntegerProperty()
