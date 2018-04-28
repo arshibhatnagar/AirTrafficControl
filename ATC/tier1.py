@@ -59,14 +59,14 @@ def update_or_insert_flight(flight, flight_key_urlsafe):
     else:
         return flight.put()
 
-def insert_flight_waypoints(flight_num):
+def insert_flight_waypoints(flight_num, flight_key_urlsafe):
     INITIAL_SPEED = 200
     INITIAL_ALTITUDE = 500
-    flight_plan = FlightPlan.query().filter(flight_num=flight_num).fetch(1)
-    first_waypoint = flight_plan.current_route[0]
+    flight_plan = FlightPlan.query(FlightPlan.flight_num == flight_num).fetch(1)[0]
+    first_waypoint = flight_plan.current_route.waypoints[0]
     new_flight_waypoints = FlightWaypoints(flight_num=flight_num, next_waypoint=first_waypoint, 
         next_speed=INITIAL_SPEED, next_altitude=INITIAL_ALTITUDE, flight_plan_urlsafe=flight_plan.key.urlsafe(), 
-        flight_urlsafe=flight.key.urlsafe(), current_route_index=0)
+        flight_urlsafe=flight_key_urlsafe, current_route_index=0)
     data = {"Waypoint": [first_waypoint.lat, first_waypoint.lon], "Speed": INITIAL_SPEED, "Altitude": INITIAL_ALTITUDE}
     return (new_flight_waypoints.put(), data)
 
@@ -92,7 +92,7 @@ def incoming_flight_data():
     flight_key = update_or_insert_flight(flight, flight_key_urlsafe)
 
     if (flight_waypoints_key_urlsafe is None):
-        flight_waypoints_key, data = insert_flight_waypoints(flight_num)
+        flight_waypoints_key, data = insert_flight_waypoints(flight_num, flight_key.urlsafe())
         data['flight_waypoints_key_urlsafe'] = flight_waypoints_key.urlsafe()
     else:
         data = retrieve_next_data(flight_waypoints_key_urlsafe)
