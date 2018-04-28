@@ -16,7 +16,7 @@ if __name__ == '__main__':
                 continue
             shortestRoute = None
             for index in range(len(candidates)):
-                new_route = candidates[index]
+                new_route = candid2018ates[index]
                 if shortestRoute is None or new_route["distance"] < shortestRoute["distance"]:
                     shortestRoute = new_route
             routes[origin+destination] = shortestRoute["waypoints"]
