@@ -27,7 +27,6 @@ class FlightPlan(ndb.Model):
     carrier = ndb.StringProperty()
     current_route = ndb.StructuredProperty(Route)
 
-
 # Stores the next waypoint for the flight to go to
 class FlightWaypoints(ndb.Model):
     # key = ndb.KeyProperty()
