@@ -42,5 +42,6 @@ class Routes(ndb.Model):
     origin = ndb.StringProperty()
     destination = ndb.StringProperty()
     num_routes = ndb.IntegerProperty()
+    routes = ndb.JsonProperty()
     # routes = ndb.StructuredProperty(Route, repeated=True)
     

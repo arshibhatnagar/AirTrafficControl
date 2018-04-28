@@ -48,17 +48,19 @@ def waypoint_updates():
 
             # Update next waypoint if the currently assigned waypoint has been reached
             if flight.location.lat == flight_waypoints.next_waypoint.lat and flight.location.lon == flight_waypoints.next_waypoint.lon:
-                for index in range(len(flight_plan.current_route)):
-                    if (flight.location.lat == flight_plan.current_route[index].lat and flight.location.lon == flight_plan.current_route[index].lon):
-                        if index == len(flight_plan.current_route) - 1:
-                            new_parameters['next_waypoint'] = None
-                        else:
-                            new_parameters['next_waypoint'] = flight_plan.current_route[index+1]
 
-            
+                # for index in range(len(flight_plan.current_route)):
+                #     if (flight.location.lat == flight_plan.current_route[index].lat and flight.location.lon == flight_plan.current_route[index].lon):
+                #         if index == len(flight_plan.current_route) - 1:
+                #             new_parameters['next_waypoint'] = None
+                #         else:
+                #             new_parameters['next_waypoint'] = flight_plan.current_route[index+1]
+
+            new_parameteres=['next_waypoint'] = flight_plan.current_route[flight_waypoints.current_route_index + 1]
+            flight_plan.current_route_index++
             flight_waypoints.next_waypoint = new_parameters['next_waypoint']
             flight_waypoints.next_altitude = new_parameters['next_altitude']
-            flight_waypoints.next_speed = new_parameters['next_speed']
+            flight_waypoints.next_speed = new_parameters['nextx_speed']
 
         ndb.put_multi([result.key for result in results])
         # put_future = ndb.put_multi_async(results)
