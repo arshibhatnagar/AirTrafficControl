@@ -1,8 +1,10 @@
 import json
 import numpy as np
+import sys
+import csv
 
 if __name__ == "__main__":
-	num_points = int(input("What is the number of flights you want to generate data for?\n"))
+	num_points = int(sys.argv[1])
 	file = open("Data/routes.txt")
 	route_list = [json.loads(line) for line in file]
 	indices = np.random.randint(175, size = num_points)
@@ -14,7 +16,7 @@ if __name__ == "__main__":
 		destination = routes["destination"]
 		#print(str(len(routes["routes"])))
 		if len(routes["routes"]) < 1:
-			print("oooh")
+			#print("oooh")
 			continue
 		route = routes["routes"][np.random.randint(len(routes["routes"]))]
 		distance = route['distance']
@@ -66,8 +68,24 @@ if __name__ == "__main__":
 
 		dynamic_data.append(datalog)
 		
-	#for data_point in dynamic_data:	
+	#for data_point in dynamic_data:
+
+	airline_codes = ['AI', 'UA', 'AA', 'EK', 'EA', 'EY', 'KL', 'DL', 'LH', 'BA']
+	fieldnames=['YEAR', 'MONTH', 'DAY_OF_MONTH', 'UNIQUE_CARRIER', 'FL_NUM', 'ORIGIN', 'DEST', 'DEP_TIME', 'ARR_TIME', 'CANCELLED' ]
+	
+	with open("Data/flightplans2.csv", 'w') as csvfile:
+		writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+		j = 105
+		for log in dynamic_data:
+			rand = np.random.randint(0, len(airline_codes))
+			dep_time = str(500 + 100*j/600 + min(59, 10*j/800 + np.random.randint(0,5))).rjust(4, '0')
+			arr_time = str(100*(np.random.randint(0,1400)/100) + min(59, 10*j/800 + np.random.randint(0,5))).rjust(4, '0')
+			
+			writer.writerow({'YEAR': 2018, 'MONTH': 6, 'DAY_OF_MONTH': 10, 'UNIQUE_CARRIER': airline_codes[rand], 'FL_NUM':j, 
+				'ORIGIN':log['origin'], 'DEST':log['destination'], 'DEP_TIME': dep_time, 'ARR_TIME': arr_time, 'CANCELLED': False})
+			j += 1
+	
 	with open("Data/dynamic_data.json", 'w') as file:
 		json.dump(dynamic_data, file)
-		
+			
 
