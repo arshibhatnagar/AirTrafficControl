@@ -22,6 +22,7 @@ class Sensor(Thread):
         self.longitudes = data['longitudes']
         self.temperatures = data['temperatures']
         self.speeds = data['speeds']
+        self.altitudes = data['altitudes']
         self.delay = delay
         
 
@@ -33,6 +34,7 @@ class Sensor(Thread):
         data['longitude'] = self.longitudes[0]
         data['temperature'] = self.temperatures[0]
         data['speed'] = self.speeds[0]
+        data['altitude'] = self.altitudes[0]
         initial_data =  json.loads(self.post_url(URL, data))
         flight_key_urlsafe = initial_data['flight_key_urlsafe']
         flight_waypoints_key_urlsafe = initial_data['flight_waypoints_key_urlsafe']
@@ -45,6 +47,7 @@ class Sensor(Thread):
             data['longitude'] = self.longitudes[i]
             data['temperature'] = self.temperatures[i]
             data['speed'] = self.speeds[i]
+            data['altitude'] = self.altitudes[0]
             self.post_url(URL, data)
             time.sleep(12)
 

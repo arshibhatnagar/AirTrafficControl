@@ -47,8 +47,13 @@ if __name__ == "__main__":
 			for i in range(num_iter-1):
 				latitudes.append(current_lat)
 				longitudes.append(current_lon)
-				altitude = min(np.random.randint(33000, 36000), 80000*min(abs(lat1 - current_lat), abs(current_lat - waypoints[-1][0])))/lat_spread
+				altitude = np.random.randint(33000, 36000)
+				if altitude < -20000 or altitude > 40000:
+					print(altitude)
 				temp = min((ground_temp*1000 - altitude)/100, -60 + 5*np.random.random())
+				if temp < -1000:
+					print("temp is " + str(temp))
+					print("altitude is" + str(altitude))
 				temperatures.append(temp)
 				speeds.append(600 + 15*np.random.random())
 				altitudes.append(altitude)
