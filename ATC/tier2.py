@@ -46,7 +46,7 @@ def waypoint_updates():
             flight_plan = flight_plans[i]
 
             # Let altitude and speed remain as is right now. Will have to change later
-            new_parameters = {'next_waypoint': flight_waypoints.next_waypoint, 'next_altitude': flight.altitude, 'next_speed': flight.speed}
+            new_parameters = {'next_waypoint': flight_waypoints.next_waypoint, 'next_altitude': 3000.0, 'next_speed': 575.0}
 
             # Update next waypoint if the currently assigned waypoint has been reached
             if flight.location.lat == flight_waypoints.next_waypoint.lat and flight.location.lon == flight_waypoints.next_waypoint.lon:
@@ -65,7 +65,7 @@ def waypoint_updates():
             flight_waypoints.next_altitude = new_parameters['next_altitude']
             flight_waypoints.next_speed = new_parameters['next_speed']
 
-        ndb.put_multi([result.key for result in results])
+        ndb.put_multi(results)
         # put_future = ndb.put_multi_async(results)
         # put_future.get_result()
         # waypoints_qry_future = qry.fetch_page_async(page_size=500, cursor=cursor)
