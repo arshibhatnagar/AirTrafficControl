@@ -1,3 +1,4 @@
+# IN THE YAML FILE, SET INSTANCE CLASS TO INSTANCES WITH BIGGER MEMORY AND A FIXED NUMBER OF RUNNING INSTANCES
 from flask import Flask, render_template, request, jsonify
 from models import Flight, FlightWaypoints, FlightPlan, Route
 from google.appengine.ext import ndb
@@ -60,8 +61,8 @@ def update_or_insert_flight(flight, flight_key_urlsafe):
         return flight.put()
 
 def insert_flight_waypoints(flight_num, flight_key_urlsafe):
-    INITIAL_SPEED = 200
-    INITIAL_ALTITUDE = 500
+    INITIAL_SPEED = 200.0
+    INITIAL_ALTITUDE = 500.0
     flight_plan = FlightPlan.query(FlightPlan.flight_num == flight_num).fetch(1)[0]
     first_waypoint = flight_plan.current_route.waypoints[0]
     new_flight_waypoints = FlightWaypoints(flight_num=flight_num, next_waypoint=first_waypoint, 

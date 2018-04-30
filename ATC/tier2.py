@@ -1,8 +1,10 @@
+# IN THE YAML FILE, SET INSTANCE CLASS TO INSTANCES WITH BIGGER MEMORY AND A FIXED NUMBER OF RUNNING INSTANCES
 from flask import Flask, render_template, request
 from models import Flight, FlightPlan, FlightWaypoints
 from google.appengine.ext import ndb
 
 app = Flask(__name__)
+app.debug=True
 
 @app.route('/')
 def hello_world():
@@ -14,9 +16,9 @@ def hello_world():
 # Need to figure out caching policy for tier 1.
 @app.route('/waypoint_updates')
 def waypoint_updates():
-    waypoints_qry = FlightWaypoints.query().order(-FlightWaypoints.datetime)
+    waypoints_qry = FlightWaypoints.query().order(FlightWaypoints.last_updated)
     # Can use the map function for tasklets. Look into that.
-    results, cursor, more = qry.fetch_page(page_size=500)
+    results, cursor, more = waypoints_qry.fetch_page(page_size=500)
     # waypoints_qry_future = qry.fetch_page_async(page_size=500)
     # results, cursor, more = waypoints_qry_future.get_result()
     last_page = False
@@ -56,11 +58,12 @@ def waypoint_updates():
                 #         else:
                 #             new_parameters['next_waypoint'] = flight_plan.current_route[index+1]
 
-            new_parameteres=['next_waypoint'] = flight_plan.current_route[flight_waypoints.current_route_index + 1]
-            flight_plan.current_route_index++
+                new_parameters['next_waypoint'] = flight_plan.current_route[flight_waypoints.current_route_index + 1]
+                flight_waypoints.current_route_index += 1
+
             flight_waypoints.next_waypoint = new_parameters['next_waypoint']
             flight_waypoints.next_altitude = new_parameters['next_altitude']
-            flight_waypoints.next_speed = new_parameters['nextx_speed']
+            flight_waypoints.next_speed = new_parameters['next_speed']
 
         ndb.put_multi([result.key for result in results])
         # put_future = ndb.put_multi_async(results)
@@ -68,6 +71,7 @@ def waypoint_updates():
         # waypoints_qry_future = qry.fetch_page_async(page_size=500, cursor=cursor)
         # results, cursor, more = waypoints_qry_future.get_result()
         if more:
-            results, cursor, more = qry.fetch_page(page_size=500)
-        if (not more):
-            last_page = True
+            results, cursor, more = waypoints_qry.fetch_page(page_size=500, start_cursor=cursor)
+            if (not more):
+                last_page = True
+    return "DONE!"

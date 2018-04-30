@@ -4,8 +4,8 @@ from google.appengine.ext import ndb
 class Flight(ndb.Model):
     # key = ndb.KeyProperty()
     flight_num = ndb.StringProperty()
-    altitude = ndb.IntegerProperty()
-    speed = ndb.IntegerProperty()
+    altitude = ndb.FloatProperty()
+    speed = ndb.FloatProperty()
     location = ndb.GeoPtProperty()
     temperature = ndb.FloatProperty()
 
@@ -32,11 +32,12 @@ class FlightWaypoints(ndb.Model):
     # key = ndb.KeyProperty()
     flight_num = ndb.StringProperty()
     next_waypoint = ndb.GeoPtProperty()
-    next_speed = ndb.IntegerProperty()
-    next_altitude = ndb.IntegerProperty()
+    next_speed = ndb.FloatProperty()
+    next_altitude = ndb.FloatProperty()
     flight_plan_urlsafe = ndb.StringProperty()
     flight_urlsafe = ndb.StringProperty()
     current_route_index = ndb.IntegerProperty()
+    last_updated = ndb.DateTimeProperty()
 
 class Routes(ndb.Model):
     origin = ndb.StringProperty()
