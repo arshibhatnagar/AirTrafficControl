@@ -1,2 +1,4 @@
 dynamic_data.json
 *.pyc
+*.json
+*.csv
