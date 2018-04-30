@@ -87,7 +87,7 @@ if __name__ == "__main__":
     airline_codes = ['AI', 'UA', 'AA', 'EK', 'EA', 'EY', 'KL', 'DL', 'LH', 'BA']
     fieldnames=['YEAR', 'MONTH', 'DAY_OF_MONTH', 'UNIQUE_CARRIER', 'FL_NUM', 'ORIGIN', 'DEST', 'DEP_TIME', 'ARR_TIME', 'CANCELLED' ]
     
-    with open("Data/flightplans.csv", 'w') as csvfile:
+    with open("Data/FlightPlans.csv", 'w') as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
         j = 105

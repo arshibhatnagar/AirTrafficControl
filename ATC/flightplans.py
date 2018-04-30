@@ -22,7 +22,7 @@ if __name__ == '__main__':
             routes[origin+destination] = shortestRoute["waypoints"]
             routes[destination+origin] = list(reversed(shortestRoute["waypoints"]))
 
-    with open('../DataGenerators/Data/flightplans.csv') as flightData:
+    with open('../DataGenerators/Data/FlightPlans.csv') as flightData:
         reader = csv.DictReader(flightData)
         counter = 0
         for row in reader:
