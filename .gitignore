@@ -1,4 +1,1 @@
-*.pyc
-ATC/env/
-.DS_Store
-ATC/lib/
+dynamic_data.json
