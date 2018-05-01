@@ -70,12 +70,10 @@ def update_or_insert_flight(flight, flight_key_urlsafe):
 def push_updates():
     global flight_update_list
     global updating
-    # print "IN PUSH"
-    # print "LEN OF FLIGHT_UPDATE_LIST IS: " + str(len(flight_update_list))
+
     update_cv.acquire()
     if (len(flight_update_list) >= 30):
         updating = True
-        # print "PUSHING UPDATES"
         new_flights, urlsafes = map(list, zip(*flight_update_list))
         flight_keys = [ndb.Key(urlsafe=urlsafe) for urlsafe in urlsafes]
         flights = ndb.get_multi(flight_keys)
