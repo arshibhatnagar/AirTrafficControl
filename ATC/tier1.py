@@ -12,6 +12,12 @@ flight_update_list = []
 update_cv = Condition()
 updating = False
 
+request_waypoint_list = []
+request_cv = Condition()
+retrieve_cv = Condition()
+retrieving = False
+waypoints_data = {}
+
 # TRYING TO DO BATCHING
 
 @app.route('/')
@@ -72,7 +78,9 @@ def push_updates():
     global updating
 
     update_cv.acquire()
-    if (len(flight_update_list) >= 30):
+    # print "Flight update list length is: " + str(len(flight_update_list))
+    if (len(flight_update_list) >= 4):
+        print "Pushing updates!"
         updating = True
         new_flights, urlsafes = map(list, zip(*flight_update_list))
         flight_keys = [ndb.Key(urlsafe=urlsafe) for urlsafe in urlsafes]
@@ -89,6 +97,30 @@ def push_updates():
         updating = False
         update_cv.notify_all()
     update_cv.release()
+
+def retrieve_waypoints():
+    global request_cv
+    global retrieve_cv
+    global retrieving
+    global request_waypoint_list
+    global waypoints_data
+
+    request_cv.acquire()
+    if (len(request_waypoint_list) >= 4):
+        retrieving = True
+        flight_waypoints_keys = [ndb.Key(urlsafe=urlsafe) for urlsafe in request_waypoint_list]
+        flight_waypoints = ndb.get_multi(flight_waypoints_keys)
+        for index in range(len(flight_waypoints_keys)):
+            key_urlsafe = request_waypoint_list[index]
+            waypoints = flight_waypoints[index]
+            waypoints_data[key_urlsafe] = {"Waypoint": [waypoints.next_waypoint.lat, waypoints.next_waypoint.lon], "Speed": waypoints.next_speed, "Altitude": waypoints.next_altitude}
+        request_waypoint_list = []
+        retrieving = False
+        request_cv.notify_all()
+        retrieve_cv.acquire()
+        retrieve_cv.notify_all()
+        retrieve_cv.release()
+    request_cv.release()
 
 def insert_flight_waypoints(flight_num, flight_key_urlsafe):
     INITIAL_SPEED = 200.0
@@ -112,6 +144,12 @@ def incoming_flight_data():
     global updating
     global update_cv
 
+    global request_cv
+    global retrieving
+    global request_waypoint_list
+
+    global retrieve_cv
+
     JSON = request.json
     flight_num = JSON.get('flight_num')
     latitude = JSON.get('latitude')
@@ -124,26 +162,40 @@ def incoming_flight_data():
         
     flight = Flight(flight_num=flight_num, location=ndb.GeoPt(latitude, longitude), 
         altitude=altitude, speed=speed, temperature=temperature)
-    flight_key = update_or_insert_flight(flight, flight_key_urlsafe)
 
-    if (flight_waypoints_key_urlsafe is None):
-        flight_waypoints_key, data = insert_flight_waypoints(flight_num, flight_key.urlsafe())
-        data['flight_waypoints_key_urlsafe'] = flight_waypoints_key.urlsafe()
-    else:
-        data = retrieve_next_data(flight_waypoints_key_urlsafe)
-    
     if flight_key_urlsafe is None:
-        flight_key_urlsafe_to_send = flight_key.urlsafe()
-        data['flight_key_urlsafe'] = flight_key_urlsafe_to_send
-
+        flight_key = flight.put() # update_or_insert_flight(flight, flight_key_urlsafe)
+        # flight_key_urlsafe_to_send = flight_key.urlsafe()
     else:
         update_cv.acquire()
         while (updating):
             update_cv.wait()
+        # print "Appending!"
         flight_update_list.append((flight, flight_key_urlsafe))
         update_cv.release()
 
-    push_updates()
+    push_updates()    
+
+    if (flight_waypoints_key_urlsafe is None):
+        flight_waypoints_key, data = insert_flight_waypoints(flight_num, flight_key.urlsafe())
+        data['flight_waypoints_key_urlsafe'] = flight_waypoints_key.urlsafe()
+        data['flight_key_urlsafe'] = flight_key.urlsafe()
+    else:
+        request_cv.acquire()
+        while (retrieving):
+            request_cv.wait()
+        request_waypoint_list.append(flight_waypoints_key_urlsafe)
+        request_cv.release()
+
+        retrieve_waypoints()
+
+        retrieve_cv.acquire()
+        while (flight_waypoints_key_urlsafe not in waypoints_data):
+            retrieve_cv.wait()
+        data = waypoints_data[flight_waypoints_key_urlsafe]
+        del waypoints_data[flight_waypoints_key_urlsafe]
+        retrieve_cv.release()
+        # data = retrieve_next_data(flight_waypoints_key_urlsafe)
 
     return jsonify(data)
 

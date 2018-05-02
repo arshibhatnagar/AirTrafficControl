@@ -48,7 +48,7 @@ class Sensor(Thread):
             data['temperature'] = self.temperatures[i]
             data['speed'] = self.speeds[i]
             data['altitude'] = self.altitudes[0]
-            self.post_url(URL, data)
+            print self.flight_num + " : " + self.post_url(URL, data)
             time.sleep(12)
 
         os.exit(0)
