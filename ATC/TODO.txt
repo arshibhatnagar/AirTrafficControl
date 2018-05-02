@@ -1,0 +1,7 @@
+Make live_data slowly bump up the number of threads rather than just starting everything together
+Modify the tier 2 update check to be a range rather than just equality
+Make the tier 2 route choosing logic better (check for crashes and weather updates)
+Incorporate caching next_data to be used by tier 1
+Make all datastore reads and writes asynchronous
+Batch flight updates written to datastore and next_data retrieved
+Build a demo (perhaps through some GUI with some flights on a map)
