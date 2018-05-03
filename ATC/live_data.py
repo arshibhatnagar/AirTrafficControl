@@ -27,7 +27,7 @@ class Sensor(Thread):
         
 
     def run(self):
-        time.sleep(0.5)
+        time.sleep(self.delay)
         data = {}
         data['flight_num'] = self.flight_num
         data['latitude'] = self.latitudes[0]
@@ -48,7 +48,7 @@ class Sensor(Thread):
             data['temperature'] = self.temperatures[i]
             data['speed'] = self.speeds[i]
             data['altitude'] = self.altitudes[0]
-            self.post_url(URL, data)
+            print self.post_url(URL, data)
             time.sleep(12)
 
         os.exit(0)
@@ -62,7 +62,7 @@ if __name__ == "__main__":
     num_threads = int(sys.argv[1])
     file = open(DATA_FILE)
     data_list = json.load(file)
-    threadpool = [Sensor(i, data_list[i], np.random.randint(0, 300)) for i in range(num_threads)]
+    threadpool = [Sensor(i, data_list[i], np.random.randint(0, 120)) for i in range(num_threads)]
     for thread in threadpool:
         thread.start()
 
