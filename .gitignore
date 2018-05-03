@@ -2,3 +2,4 @@
 *.DS_Store
 ATC/env/
 ATC/lib
+env/
