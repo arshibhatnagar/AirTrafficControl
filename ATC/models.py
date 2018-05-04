@@ -35,7 +35,7 @@ class FlightWaypoints(ndb.Model):
     next_speed = ndb.FloatProperty()
     next_altitude = ndb.FloatProperty()
     flight_plan_urlsafe = ndb.StringProperty()
-    flight_urlsafe = ndb.StringProperty()
+    # flight_urlsafe = ndb.StringProperty()
     current_route_index = ndb.IntegerProperty()
     last_updated = ndb.DateTimeProperty()
 
