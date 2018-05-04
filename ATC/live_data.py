@@ -27,7 +27,7 @@ class Sensor(Thread):
         
 
     def run(self):
-        time.sleep(self.delay)
+        time.sleep(0.5)
         data = {}
         data['flight_num'] = self.flight_num
         data['latitude'] = self.latitudes[0]

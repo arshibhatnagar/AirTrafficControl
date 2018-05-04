@@ -31,18 +31,18 @@ def hello_world():
 
 #converting to tasklet, this makes the update/inserting flights function totally asynchronous
 @ndb.toplevel
-@ndb.synctasklet
-def update_or_insert_tasklet(flight_key, flight):
-    fetched = yield flight_key.get_async()
-    if fetched is not None: #updating flight
-        fetched.latitude = flight.latitude
-        fetched.longitude = flight.longitude
+@ndb.tasklet
+def update_or_insert_tasklet(flight_key_urlsafe, flight):
+    if flight_key_urlsafe is not None:
+        flight_key = ndb.Key(urlsafe=flight_key_urlsafe)
+        fetched = yield flight_key.get_async()
+        fetched.location = flight.location
         fetched.altitude = flight.altitude
         fetched.speed = flight.speed
         fetched.temperature = flight.temperature
         fetched_key = yield fetched.put_async()
         raise ndb.Return(fetched_key)
-    else: #inserting flight
+    else:
         flight_key = yield flight.put_async()
         raise ndb.Return(flight_key)
 
@@ -60,12 +60,13 @@ def update_or_insert_flight(flight, flight_key_urlsafe):
 
 #converting to tasklet so that it makes inserting waypoints totally asyncronous 
 @ndb.toplevel
-@ndb.synctasklet
+@ndb.tasklet
 def insert_flight_waypoints_tasklet(flight_num, flight_key_urlsafe):
     INITIAL_SPEED = 200.0
     INITIAL_ALTITUDE = 500.0
     #async part of inserting fetching from datastore
-    flight_plan =  yield FlightPlan.query(FlightPlan.flight_num == flight_num).fetch_async(1)[0]
+    flight_plans =  yield FlightPlan.query(FlightPlan.flight_num == flight_num).fetch_async(1)
+    flight_plan = flight_plans[0]
     first_waypoint = flight_plan.current_route.waypoints[0]
     new_flight_waypoints = FlightWaypoints(flight_num=flight_num, next_waypoint=first_waypoint, 
         next_speed=INITIAL_SPEED, next_altitude=INITIAL_ALTITUDE, flight_plan_urlsafe=flight_plan.key.urlsafe(), 
@@ -88,7 +89,7 @@ def insert_flight_waypoints(flight_num, flight_key_urlsafe):
 
 #converting to tasklet so that it makes retrieving next data point totally asyncronous
 @ndb.toplevel
-@ndb.synctasklet
+@ndb.tasklet
 def retrieve_next_data_tasklet(flight_waypoints_key_urlsafe):
     flight_waypoints_key = ndb.Key(urlsafe=flight_waypoints_key_urlsafe)
     fetched = yield flight_waypoints_key.get_async()
@@ -99,11 +100,9 @@ def retrieve_next_data(flight_waypoints_key_urlsafe):
     fetched = flight_waypoints_key.get()
     return {"Waypoint": [fetched.next_waypoint.lat, fetched.next_waypoint.lon], "Speed": fetched.next_speed, "Altitude": fetched.next_altitude}
 
-@app.route('/flight', methods=['POST'])
 @ndb.toplevel
 @ndb.synctasklet
-def incoming_flight_data():
-    JSON = request.json
+def input_flight_data(JSON):
     flight_num = JSON.get('flight_num')
     latitude = JSON.get('latitude')
     longitude = JSON.get('longitude')
@@ -117,7 +116,7 @@ def incoming_flight_data():
         altitude=altitude, speed=speed, temperature=temperature)
 
     #async parts using a tasklet to update and insert flights into the datastore
-    flight_key = yield update_or_insert_tasklet(flight_key_urlsafe, flight).get_result()
+    flight_key = yield update_or_insert_tasklet(flight_key_urlsafe, flight)
 
     # flight_key = update_or_insert_flight(flight, flight_key_urlsafe)
 
@@ -137,7 +136,15 @@ def incoming_flight_data():
         flight_key_urlsafe_to_send = flight_key.urlsafe()
         data['flight_key_urlsafe'] = flight_key_urlsafe_to_send
 
-    return jsonify(data)
+    output = jsonify(data)
+    raise ndb.Return(output)
+
+@app.route('/flight', methods=['POST'])
+def incoming_flight_data():
+    JSON = request.json
+    output = input_flight_data(JSON)
+    return output
+    
 
     # Look into using get_or_insert
     # Want to do this batched
@@ -147,9 +154,7 @@ def incoming_flight_data():
 #tasklet to put the flight plan into the datastore, to improve overall app performance
 @ndb.toplevel
 @ndb.synctasklet
-@app.route('/insert_flight_plan', methods=['POST'])
-def insert_flight_plan():
-    JSON = request.json
+def flight_plan_insert(JSON):
     flight_num = JSON.get('flight_num')
     origin = JSON.get('origin')
     dest = JSON.get('dest')
@@ -173,7 +178,14 @@ def insert_flight_plan():
         arr_time=arr_time, cancelled=cancelled, carrier=carrier, current_route=Route(waypoints=current_route))
     #converting the put operation to async tasklet
     flight_plan_key = yield flight_plan.put_async()
-    return flight_plan_key.urlsafe()
+    raise ndb.Return(flight_plan_key.urlsafe())
 
+
+@app.route('/insert_flight_plan', methods=['POST'])
+def insert_flight_plan():
+    JSON = request.json
+    flight_plan_key_urlsafe = flight_plan_insert(JSON)
+    return flight_plan_key_urlsafe
+    
     # return flight_plan.put().urlsafe()
 
