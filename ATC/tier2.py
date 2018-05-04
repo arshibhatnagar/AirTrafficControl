@@ -49,7 +49,7 @@ def waypoint_updates():
             new_parameters = {'next_waypoint': flight_waypoints.next_waypoint, 'next_altitude': 3000.0, 'next_speed': 575.0}
 
             # Update next waypoint if the currently assigned waypoint has been reached
-            if flight.location.lat == flight_waypoints.next_waypoint.lat and flight.location.lon == flight_waypoints.next_waypoint.lon:
+            if ((flight.location.lat- flight_waypoints.next_waypoint.lat)**2 + (flight.location.lon - flight_waypoints.next_waypoint.lon)**2)**0.5 < 0.1:
 
                 # for index in range(len(flight_plan.current_route)):
                 #     if (flight.location.lat == flight_plan.current_route[index].lat and flight.location.lon == flight_plan.current_route[index].lon):
