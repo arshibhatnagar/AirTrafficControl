@@ -116,19 +116,20 @@ def input_flight_data(JSON):
         altitude=altitude, speed=speed, temperature=temperature)
 
     #async parts using a tasklet to update and insert flights into the datastore
-    flight_key = yield update_or_insert_tasklet(flight_key_urlsafe, flight)
+    
 
     # flight_key = update_or_insert_flight(flight, flight_key_urlsafe)
 
     if (flight_waypoints_key_urlsafe is None):
         # async parts using a tasklet to insert new waypoints into the datastore
+        flight_key = yield update_or_insert_tasklet(flight_key_urlsafe, flight)
         flight_waypoints_key, data = yield insert_flight_waypoints_tasklet(flight_num, flight_key.urlsafe())
 
         # flight_waypoints_key, data = insert_flight_waypoints(flight_num, flight_key.urlsafe())
         data['flight_waypoints_key_urlsafe'] = flight_waypoints_key.urlsafe()
     else:
         # async parts to retrieve the next data as a tasklet, to improve app performance
-        data = yield retrieve_next_data_tasklet(flight_waypoints_key_urlsafe)
+        flight_key, data = yield update_or_insert_tasklet(flight_key_urlsafe, flight), retrieve_next_data_tasklet(flight_waypoints_key_urlsafe)
 
         # data = retrieve_next_data(flight_waypoints_key_urlsafe)
     
