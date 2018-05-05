@@ -61,7 +61,7 @@ def update_or_insert_flight(flight, flight_key_urlsafe):
 #converting to tasklet so that it makes inserting waypoints totally asyncronous 
 @ndb.toplevel
 @ndb.tasklet
-def insert_flight_waypoints_tasklet(flight_num):
+def insert_flight_waypoints_tasklet(flight_num, flight_key_urlsafe):
     INITIAL_SPEED = 200.0
     INITIAL_ALTITUDE = 500.0
     #async part of inserting fetching from datastore
@@ -69,7 +69,8 @@ def insert_flight_waypoints_tasklet(flight_num):
     flight_plan = flight_plans[0]
     first_waypoint = flight_plan.current_route.waypoints[0]
     new_flight_waypoints = FlightWaypoints(flight_num=flight_num, next_waypoint=first_waypoint, 
-        next_speed=INITIAL_SPEED, next_altitude=INITIAL_ALTITUDE, flight_plan_urlsafe=flight_plan.key.urlsafe(), current_route_index=0)
+        next_speed=INITIAL_SPEED, next_altitude=INITIAL_ALTITUDE, flight_plan_urlsafe=flight_plan.key.urlsafe(), 
+        flight_urlsafe=flight_key_urlsafe, current_route_index=0)
     data = {"Waypoint": [first_waypoint.lat, first_waypoint.lon], "Speed": INITIAL_SPEED, "Altitude": INITIAL_ALTITUDE}
     #this part can become async and converted into a tasklet, so multiple tasks can run while one yields
     flight_waypoints = yield new_flight_waypoints.put_async()
@@ -121,7 +122,7 @@ def input_flight_data(JSON):
 
     if (flight_waypoints_key_urlsafe is None):
         # async parts using a tasklet to insert new waypoints into the datastore
-        flight_waypoints_key, data = yield insert_flight_waypoints_tasklet(flight_num)
+        flight_waypoints_key, data = yield insert_flight_waypoints_tasklet(flight_num, flight_key.urlsafe())
 
         # flight_waypoints_key, data = insert_flight_waypoints(flight_num, flight_key.urlsafe())
         data['flight_waypoints_key_urlsafe'] = flight_waypoints_key.urlsafe()
