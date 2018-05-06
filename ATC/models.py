@@ -10,6 +10,7 @@ class Flight(ndb.Model):
     speed = ndb.FloatProperty(indexed=False)
     location = ndb.GeoPtProperty(indexed=False)
     temperature = ndb.FloatProperty(indexed=False)
+    version = ndb.IntegerProperty()
 
 class Route(ndb.Model):
     waypoints = ndb.GeoPtProperty(repeated=True)
@@ -37,9 +38,10 @@ class FlightWaypoints(ndb.Model):
     next_speed = ndb.FloatProperty(indexed=False)
     next_altitude = ndb.FloatProperty(indexed=False)
     flight_plan_urlsafe = ndb.StringProperty(indexed=False)
-    flight_urlsafe = ndb.StringProperty()
+    flight_urlsafe = ndb.StringProperty(indexed=False)
     current_route_index = ndb.IntegerProperty(indexed=False)
     last_updated = ndb.DateTimeProperty(auto_now=True)
+    version = ndb.IntegerProperty()
 
 class Routes(ndb.Model):
     origin = ndb.StringProperty(indexed=False)

@@ -62,7 +62,7 @@ if __name__ == "__main__":
     num_threads = int(sys.argv[1])
     file = open(DATA_FILE)
     data_list = json.load(file)
-    threadpool = [Sensor(i, data_list[i], np.random.randint(0, 5)) for i in range(num_threads)]
+    threadpool = [Sensor(i, data_list[i], np.random.randint(0, 10)) for i in range(num_threads)]
     for thread in threadpool:
         thread.start()
 
