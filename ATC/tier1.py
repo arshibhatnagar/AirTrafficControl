@@ -21,6 +21,10 @@ it's more suitable to make the appropriate parts syncronous.
 app = Flask(__name__)
 app.debug=True
 
+MAX_VERSION_DIFFERENCE = 6
+INITIAL_SPEED = 200.0
+INITIAL_ALTITUDE = 500.0
+
 
 @ndb.toplevel
 @ndb.tasklet
@@ -43,8 +47,6 @@ def update_or_insert_tasklet(flight_key_urlsafe, flight):
 @ndb.toplevel
 @ndb.tasklet
 def insert_flight_waypoints_tasklet(flight_num, flight_key_urlsafe):
-    INITIAL_SPEED = 200.0
-    INITIAL_ALTITUDE = 500.0
 
     flight_plans =  yield FlightPlan.query(FlightPlan.flight_num == flight_num).fetch_async(1)
     flight_plan = flight_plans[0]
@@ -63,7 +65,7 @@ def retrieve_next_data_tasklet(flight_waypoints_key_urlsafe, flight_key_urlsafe)
     flight_waypoints_key = ndb.Key(urlsafe=flight_waypoints_key_urlsafe)
     flight_key = ndb.Key(urlsafe=flight_key_urlsafe)
     fetched, flight = yield flight_waypoints_key.get_async(), flight_key.get_async()
-    if flight.version - fetched.version < 5:
+    if flight.version - fetched.version < MAX_VERSION_DIFFERENCE:
         raise ndb.Return({"Waypoint": [fetched.next_waypoint.lat, fetched.next_waypoint.lon], "Speed": fetched.next_speed, "Altitude": fetched.next_altitude})
     else:
         response = requests.post('http://localhost:8081/specific_waypoint_update', 
