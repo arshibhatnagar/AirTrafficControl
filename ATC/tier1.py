@@ -161,13 +161,14 @@ def check_update_done(flight_key_urlsafe, flight):
 @app.route('/flight', methods=['POST'])
 def incoming_flight_data():
     task = taskqueue.add(
-            url='/replicate_request',
+            url='/flight',
             method='POST',
             headers={'Content-Type': 'application/json'},
             payload=json.dumps(request.json),
-            countdown=1)
+            countdown=6)
     JSON = request.json
     output = input_flight_data(JSON)
+    deleted = taskqueue.Queue('default').delete_tasks(task)
     return output
 
 

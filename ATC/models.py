@@ -11,7 +11,6 @@ class Flight(ndb.Model):
     location = ndb.GeoPtProperty(indexed=False)
     temperature = ndb.FloatProperty(indexed=False)
     version = ndb.IntegerProperty()
-    last_updated = ndb.DateTimeProperty(auto_now=True)
 
 class Route(ndb.Model):
     waypoints = ndb.GeoPtProperty(repeated=True)
