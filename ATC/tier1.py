@@ -6,7 +6,7 @@ import datetime
 import requests
 import requests_toolbelt.adapters.appengine
 import json
-from google.appengine.api import memcache
+from google.appengine.api import memcache, taskqueue
 
 requests_toolbelt.adapters.appengine.monkeypatch()
 
@@ -23,6 +23,7 @@ app = Flask(__name__)
 app.debug=True
 
 MAX_VERSION_DIFFERENCE = 6
+MIN_REPLICATED_UPDATE_DIFFERENCE = 6
 INITIAL_SPEED = 200.0
 INITIAL_ALTITUDE = 500.0
 
@@ -140,8 +141,31 @@ def flight_plan_insert(JSON):
     raise ndb.Return(flight_plan_key.urlsafe())
 
 
+@ndb.toplevel
+@ndb.synctasklet
+def check_update_done(flight_key_urlsafe, flight):
+    flight_key = ndb.Key(urlsafe=flight_key_urlsafe)
+    fetched = yield flight_key.get_async()
+    if ((datetime.datetime.now() - fetched.last_updated).total_seconds() > MIN_REPLICATED_UPDATE_DIFFERENCE):
+        fetched.location = flight.location
+        fetched.altitude = flight.altitude
+        fetched.speed = flight.speed
+        fetched.temperature = flight.temperature
+        fetched.version += 1
+        fetched_key = yield fetched.put_async()
+        raise ndb.Return(True)
+    else:
+        raise ndb.Return(False)
+
+
 @app.route('/flight', methods=['POST'])
 def incoming_flight_data():
+    task = taskqueue.add(
+            url='/replicate_request',
+            method='POST',
+            headers={'Content-Type': 'application/json'},
+            payload=json.dumps(request.json),
+            countdown=1)
     JSON = request.json
     output = input_flight_data(JSON)
     return output
@@ -152,6 +176,32 @@ def insert_flight_plan():
     JSON = request.json
     flight_plan_key_urlsafe = flight_plan_insert(JSON)
     return flight_plan_key_urlsafe
+
+@app.route('/replicate_request', methods=['POST'])
+def replicate_request():
+    JSON = request.json
+    flight_num = JSON.get('flight_num')
+    latitude = JSON.get('latitude')
+    longitude = JSON.get('longitude')
+    altitude = JSON.get('altitude')
+    speed = JSON.get('speed')
+    temperature = JSON.get('temperature')
+    flight_key_urlsafe = JSON.get('flight_key_urlsafe') if 'flight_key_urlsafe' in JSON else None
+
+    flight = Flight(flight_num=flight_num, location=ndb.GeoPt(latitude, longitude), 
+        altitude=altitude, speed=speed, temperature=temperature, version=0)
+
+    if flight_key_urlsafe is None:
+        return "FLIGHT KEY DOES NOT EXIST. NOT INSERTED YET."
+
+    else:
+        updated = check_update_done(flight_key_urlsafe, flight)
+        if updated:
+            return "REPLICATED REQUEST UPDATED"
+
+    return "NO NEED TO REPLICATE"
+
+
 
 @app.route('/')
 def hello_world():
