@@ -1,10 +1,13 @@
 # IN THE YAML FILE, SET INSTANCE CLASS TO INSTANCES WITH BIGGER MEMORY AND A FIXED NUMBER OF RUNNING INSTANCES
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, jsonify
 from models import Flight, FlightPlan, FlightWaypoints
 from google.appengine.ext import ndb
+from google.appengine.api import memcache, taskqueue
 
 app = Flask(__name__)
 app.debug=True
+
+client = memcache.Client()
 
 
 @ndb.toplevel
@@ -29,6 +32,8 @@ def execute_updates():
         flight_plans, flights = yield ndb.get_multi_async(flight_plan_keys), ndb.get_multi_async(flight_keys)
         new_flight_parameters = [flight.location for flight in flights]
 
+        to_cache = {}
+
         for i in range(len(results)):
             flight_waypoints = results[i]
             flight = flights[i]
@@ -44,12 +49,20 @@ def execute_updates():
             flight_waypoints.next_speed = new_parameters['next_speed']
             flight_waypoints.version = flight.version
 
+            client.set(flight_waypoints.flight_urlsafe, flight_waypoints)
+
+            # to_cache[flight_waypoints.flight_urlsafe] = flight_waypoints
+
         yield ndb.put_multi_async(results)
+        # print client.set_multi(to_cache)
 
         if more:
             results = next_results
             cursor = next_cursor
             more = next_more
+    task = taskqueue.add(
+            url='/waypoint_updates',
+            method='GET')
     raise ndb.Return(True)
 
 @ndb.toplevel
