@@ -1,5 +1,0 @@
-cron:
-- description: "Periodic next-waypoints updates"
-  url: /waypoint_updates
-  schedule: every 1 minutes
-  target: backend-updates
