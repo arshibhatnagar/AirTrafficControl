@@ -7,8 +7,9 @@ import numpy as np
 import json
 
 
-URL = "http://localhost:8080/flight"
+URL = "https://smart-atc.appspot.com/flight"
 DATA_FILE = "../DataGenerators/Data/dynamic_data.json"
+BACKEND_URL = "https://backend-updates-dot-smart-atc.appspot.com/waypoint_updates"
 
 class Sensor(Thread):
     
@@ -63,7 +64,7 @@ if __name__ == "__main__":
     file = open(DATA_FILE)
     data_list = json.load(file)
     threadpool = [Sensor(i, data_list[i], np.random.randint(0, 50)) for i in range(num_threads)]
-    requests.get("http://localhost:8081/waypoint_updates")
+    requests.get(BACKEND_URL)
     for thread in threadpool:
         thread.start()
 

@@ -27,6 +27,8 @@ MIN_REPLICATED_UPDATE_DIFFERENCE = 6
 INITIAL_SPEED = 200.0
 INITIAL_ALTITUDE = 500.0
 
+URL = "https://smart-atc.appspot.com"
+
 client = memcache.Client()
 
 
@@ -70,7 +72,6 @@ def retrieve_next_data_tasklet(flight_waypoints_key_urlsafe, flight_key_urlsafe)
     fetched = client.get(flight_key_urlsafe)
     
     if fetched is None:
-        print "MISS"
         flight_waypoints_key = ndb.Key(urlsafe=flight_waypoints_key_urlsafe)
         fetched, flight = yield flight_waypoints_key.get_async(), flight_key.get_async()
     else:
@@ -78,7 +79,7 @@ def retrieve_next_data_tasklet(flight_waypoints_key_urlsafe, flight_key_urlsafe)
     if flight.version - fetched.version < MAX_VERSION_DIFFERENCE:
         raise ndb.Return({"Waypoint": [fetched.next_waypoint.lat, fetched.next_waypoint.lon], "Speed": fetched.next_speed, "Altitude": fetched.next_altitude})
     else:
-        response = requests.post('http://localhost:8081/specific_waypoint_update', 
+        response = requests.post('https://backend-updates-dot-smart-atc.appspot.com/specific_waypoint_update', 
             json={"flight_waypoints_key_urlsafe": flight_waypoints_key_urlsafe, "flight_key_urlsafe": flight_key_urlsafe}).content
         raise ndb.Return(json.loads(response))
 
@@ -161,6 +162,7 @@ def check_update_done(flight_key_urlsafe, flight):
 @app.route('/flight', methods=['POST'])
 def incoming_flight_data():
     task = taskqueue.add(
+            queue_name='replication',
             url='/flight',
             method='POST',
             headers={'Content-Type': 'application/json'},
@@ -168,7 +170,7 @@ def incoming_flight_data():
             countdown=6)
     JSON = request.json
     output = input_flight_data(JSON)
-    deleted = taskqueue.Queue('default').delete_tasks(task)
+    deleted = taskqueue.Queue('replication').delete_tasks(task)
     return output
 
 

@@ -1,6 +1,7 @@
 service: backend-updates
 runtime: python27
 api_version: 1
+instance_class: F4
 threadsafe: true
 
 handlers:
