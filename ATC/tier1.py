@@ -79,7 +79,7 @@ def retrieve_next_data_tasklet(flight_waypoints_key_urlsafe, flight_key_urlsafe)
     if flight.version - fetched.version < MAX_VERSION_DIFFERENCE:
         raise ndb.Return({"Waypoint": [fetched.next_waypoint.lat, fetched.next_waypoint.lon], "Speed": fetched.next_speed, "Altitude": fetched.next_altitude})
     else:
-        response = requests.post('https://backend-updates-dot-smart-atc.appspot.com/specific_waypoint_update', 
+        response = requests.post('http://localhost:8081/specific_waypoint_update', 
             json={"flight_waypoints_key_urlsafe": flight_waypoints_key_urlsafe, "flight_key_urlsafe": flight_key_urlsafe}).content
         raise ndb.Return(json.loads(response))
 

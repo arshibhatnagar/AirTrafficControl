@@ -3,7 +3,7 @@ import csv
 import requests
 
 routes = {}
-URL = "https://smart-atc.appspot.com/insert_flight_plan"
+URL = "http://localhost:8080/insert_flight_plan"
 
 if __name__ == '__main__':
     with open('../DataGenerators/Data/routes.txt') as routes_handler:
