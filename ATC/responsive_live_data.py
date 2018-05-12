@@ -9,6 +9,7 @@ import json
 
 URL = "http://localhost:8080/flight"
 DATA_FILE = "../DataGenerators/Data/dynamic_data.json"
+BACKEND_URL = "http://localhost:8081/waypoint_updates"
 
 class Sensor(Thread):
     
@@ -24,8 +25,10 @@ class Sensor(Thread):
         self.speeds = data['speeds']
         self.altitudes = data['altitudes']
         self.delay = delay
-        self.last = [self.latitudes[0], self.longitudes[0]]
-        self.next = None
+        self.last = {"Waypoint" : [self.latitudes[0], self.longitudes[0]], "Speed": 400, "Altitude": 30400}
+        self.next = self.last
+        self.last_lat = None
+        self.last_lon = None
         
 
     def run(self):
@@ -37,6 +40,9 @@ class Sensor(Thread):
         data['temperature'] = self.temperatures[0]
         data['speed'] = self.speeds[0]
         data['altitude'] = self.altitudes[0]
+        self.last_lat = data['latitude']
+        self.last_lon = data['longitude']
+
         initial_data =  self.post_url(URL, data)
         flight_key_urlsafe = initial_data['flight_key_urlsafe']
         flight_waypoints_key_urlsafe = initial_data['flight_waypoints_key_urlsafe']
@@ -45,10 +51,13 @@ class Sensor(Thread):
 
         time.sleep(12)
         for i in range(1, len(self.latitudes)):
-            data['latitude'], data['longitude'] = self.process_wp()
+            new_lat_interval, new_lon_interval = self.process_wp()
+            self.last_lat = new_lat_interval
+            self.last_lon = new_lon_interval
+            data['latitude'], data['longitude'] = self.last_lat, self.last_lon
             data['temperature'] = self.temperatures[i%len(self.temperatures)]
-            data['speed'] = self.next['next_speed'] + np.random.randint(-20, 30)
-            data['altitude'] = self.next['next_altitude'] + np.random.randint(-200, 240)
+            data['speed'] = self.next['Speed'] + np.random.randint(-20, 30)
+            data['altitude'] = self.next['Altitude'] + np.random.randint(-200, 240)
             self.post_url(URL, data)
             time.sleep(12)
 
@@ -56,23 +65,25 @@ class Sensor(Thread):
     
 
     def process_wp(self):
-        latitude = self.last[0] + (self.next[0] - self.last[0])/20.0
-        longitude = self.last[1] + (self.next[1] - self.last[1])/20.0
+        latitude = self.last_lat + (self.next["Waypoint"][0] - self.last["Waypoint"][0])/20.0
+        longitude = self.last_lon + (self.next["Waypoint"][1] - self.last["Waypoint"][1])/20.0
 
         return latitude, longitude
 
     def post_url(self, url, data):
-        next = json.loads(requests.post(url, json=data).content)
-        if (next != self.next):
+        msg = json.loads(requests.post(url, json=data).content)
+        next_waypoint = msg["Waypoint"]
+        if (next_waypoint != self.next["Waypoint"]):
             self.last = self.next
-            self.next = next
-        return next
+            self.next = msg
+        return msg
 
 if __name__ == "__main__":
     num_threads = int(sys.argv[1])
     file = open(DATA_FILE)
     data_list = json.load(file)
-    threadpool = [Sensor(i, data_list[i], np.random.randint(0, 5)) for i in range(num_threads)]
+    threadpool = [Sensor(i, data_list[i], np.random.randint(0, 10)) for i in range(num_threads)]
+    requests.get(BACKEND_URL)
     for thread in threadpool:
         thread.start()
 
