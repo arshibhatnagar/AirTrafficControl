@@ -57,10 +57,12 @@ def insert_flight_waypoints_tasklet(flight_num, flight_key_urlsafe):
     flight_plans =  yield FlightPlan.query(FlightPlan.flight_num == flight_num).fetch_async(1)
     flight_plan = flight_plans[0]
     first_waypoint = flight_plan.current_route.waypoints[0]
-    new_flight_waypoints = FlightWaypoints(flight_num=flight_num, next_waypoint=first_waypoint, 
+    last_waypoint = flight_plan.current_route.waypoints[-1]
+    new_flight_waypoints = FlightWaypoints(flight_num=flight_num, next_waypoint=first_waypoint, dest_waypoint=last_waypoint, 
         next_speed=INITIAL_SPEED, next_altitude=INITIAL_ALTITUDE, flight_plan_urlsafe=flight_plan.key.urlsafe(), 
         flight_urlsafe=flight_key_urlsafe, current_route_index=0, version=0)
-    data = {"Waypoint": [first_waypoint.lat, first_waypoint.lon], "Speed": INITIAL_SPEED, "Altitude": INITIAL_ALTITUDE}
+    data = {"Waypoint": [first_waypoint.lat, first_waypoint.lon], "Dest Waypoint": [last_waypoint.lat, last_waypoint.lon], 
+    "Speed": INITIAL_SPEED, "Altitude": INITIAL_ALTITUDE}
     flight_waypoints = yield new_flight_waypoints.put_async()
     raise ndb.Return((flight_waypoints, data)) 
 
@@ -77,9 +79,9 @@ def retrieve_next_data_tasklet(flight_waypoints_key_urlsafe, flight_key_urlsafe)
     else:
         flight = yield flight_key.get_async()
     if flight.version - fetched.version < MAX_VERSION_DIFFERENCE:
-        raise ndb.Return({"Waypoint": [fetched.next_waypoint.lat, fetched.next_waypoint.lon], "Speed": fetched.next_speed, "Altitude": fetched.next_altitude})
+        raise ndb.Return({"Waypoint": [fetched.next_waypoint.lat, fetched.next_waypoint.lon], "Speed": fetched.next_speed, "Altitude": fetched.next_altitude, "Dest Waypoint": [fetched.dest_waypoint.lat, fetched.dest_waypoint.lon]})
     else:
-        response = requests.post('http://localhost:8081/specific_waypoint_update', 
+        response = requests.post('http://backend-updates-dot-smart-atc.appspot.com/specific_waypoint_update', 
             json={"flight_waypoints_key_urlsafe": flight_waypoints_key_urlsafe, "flight_key_urlsafe": flight_key_urlsafe}).content
         raise ndb.Return(json.loads(response))
 
@@ -169,6 +171,7 @@ def incoming_flight_data():
             payload=json.dumps(request.json),
             countdown=6)
     JSON = request.json
+    print JSON
     output = input_flight_data(JSON)
     deleted = taskqueue.Queue('replication').delete_tasks(task)
     return output

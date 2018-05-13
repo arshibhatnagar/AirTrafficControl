@@ -83,6 +83,7 @@ def execute_waypoint_update(flight_waypoints_key, flight_key):
     flight_waypoints.version = flight.version
     yield flight_waypoints.put_async()
     response = {"Waypoint": [flight_waypoints.next_waypoint.lat, flight_waypoints.next_waypoint.lon], 
+        "Dest Waypoint": [flight_waypoints.dest_waypoint.lat, flight_waypoints.dest_waypoint.lon], 
         "Speed": flight_waypoints.next_speed, 
         "Altitude": flight_waypoints.next_altitude}
     raise ndb.Return(response)

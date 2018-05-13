@@ -35,6 +35,7 @@ class FlightWaypoints(ndb.Model):
     # key = ndb.KeyProperty()
     flight_num = ndb.StringProperty(indexed=False)
     next_waypoint = ndb.GeoPtProperty(indexed=False)
+    dest_waypoint = ndb.GeoPtProperty(indexed=False)
     next_speed = ndb.FloatProperty(indexed=False)
     next_altitude = ndb.FloatProperty(indexed=False)
     flight_plan_urlsafe = ndb.StringProperty(indexed=False)
