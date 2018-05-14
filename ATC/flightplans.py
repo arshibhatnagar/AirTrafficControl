@@ -22,7 +22,7 @@ if __name__ == '__main__':
             routes[origin+destination] = shortestRoute["waypoints"]
             routes[destination+origin] = list(reversed(shortestRoute["waypoints"]))
 
-    with open('../DataGenerators/Data/FlightPlans.csv') as flightData:
+    with open('../DataGenerators/Data/FlightPlans2.csv') as flightData:
         reader = csv.DictReader(flightData)
         counter = 0
         for row in reader:
@@ -39,9 +39,9 @@ if __name__ == '__main__':
             arr_time = ':'.join([row['ARR_TIME'][:-2], row['ARR_TIME'][-2:]])
             current_route = routes[origin+dest]
             carrier = row['UNIQUE_CARRIER']
-            requests.post(URL, json={'flight_num': flight_num, 'origin': origin, 'dest': dest, 
+            print(requests.post(URL, json={'flight_num': flight_num, 'origin': origin, 'dest': dest, 
                 'dep_date': dep_date, 'arr_date': arr_date, 'dep_time': dep_time, 'arr_time': arr_time, 
-                'current_route': current_route, 'carrier': carrier})
+                'current_route': current_route, 'carrier': carrier}).content)
             counter += 1
 
     print "DONE!"

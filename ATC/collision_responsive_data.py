@@ -8,7 +8,7 @@ import json
 
 
 URL = "http://localhost:8080/flight"
-DATA_FILE = "../DataGenerators/Data/dynamic_data.json"
+DATA_FILE = "../DataGenerators/Data/collision_dynamic_data.json"
 BACKEND_URL = "http://localhost:8081/waypoint_updates"
 
 class Sensor(Thread):
@@ -57,9 +57,9 @@ class Sensor(Thread):
             data['latitude'], data['longitude'] = self.last_lat, self.last_lon
             data['temperature'] = self.temperatures[i%len(self.temperatures)]
             data['speed'] = self.next['Speed'] + np.random.randint(-20, 30)
-            data['altitude'] = self.next['Altitude'] + np.random.randint(-100, 140)
+            data['altitude'] = self.next['Altitude'] + np.random.randint(-100, 100)
             self.post_url(URL, data)
-            time.sleep(12)
+            time.sleep(1)
 
         os.exit(0)
     
@@ -79,10 +79,10 @@ class Sensor(Thread):
         return msg
 
 if __name__ == "__main__":
-    num_threads = int(sys.argv[1])
+    #num_threads = int(sys.argv[1])
     file = open(DATA_FILE)
     data_list = json.load(file)
-    threadpool = [Sensor(i, data_list[i], np.random.randint(0, 10)) for i in range(num_threads)]
+    threadpool = [Sensor(i, data_list[i], 0) for i in range(2)]
     requests.get(BACKEND_URL)
     for thread in threadpool:
         thread.start()

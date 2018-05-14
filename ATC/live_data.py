@@ -7,9 +7,11 @@ import numpy as np
 import json
 
 
-URL = "https://smart-atc.appspot.com/flight"
+#URL = "https://smart-atc.appspot.com/flight"
+URL = "http://localhost:8080/flight"
 DATA_FILE = "../DataGenerators/Data/dynamic_data.json"
-BACKEND_URL = "https://backend-updates-dot-smart-atc.appspot.com/waypoint_updates"
+#BACKEND_URL = "https://backend-updates-dot-smart-atc.appspot.com/waypoint_updates"
+BACKEND_URL = "http://localhost:8081/waypoint_updates"
 
 class Sensor(Thread):
     
@@ -49,7 +51,8 @@ class Sensor(Thread):
             data['temperature'] = self.temperatures[i]
             data['speed'] = self.speeds[i]
             data['altitude'] = self.altitudes[0]
-            print self.post_url(URL, data)
+            self.post_url(URL, data)
+            print("Messi")
             time.sleep(12)
 
         os.exit(0)
@@ -63,7 +66,7 @@ if __name__ == "__main__":
     num_threads = int(sys.argv[1])
     file = open(DATA_FILE)
     data_list = json.load(file)
-    threadpool = [Sensor(i, data_list[i], np.random.randint(0, 50)) for i in range(num_threads)]
+    threadpool = [Sensor(i, data_list[i], np.random.randint(0, 20)) for i in range(num_threads)]
     requests.get(BACKEND_URL)
     for thread in threadpool:
         thread.start()
