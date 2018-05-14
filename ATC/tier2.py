@@ -105,7 +105,7 @@ def execute_updates():
 def execute_waypoint_update(flight_waypoints_key, flight_key):
     flight_waypoints, flight = yield flight_waypoints_key.get_async(), flight_key.get_async()
     flight_plan = yield ndb.Key(urlsafe=flight_waypoints.flight_plan_urlsafe).get_async()
-    new_parameters = {'next_waypoint': flight_waypoints.next_waypoint, 'next_altitude': 5000.0, 'next_speed': 975.0}
+    new_parameters = {'next_waypoint': flight_waypoints.next_waypoint, 'next_altitude': 20000.0, 'next_speed': 975.0}
     if ((flight.location.lat- flight_waypoints.next_waypoint.lat)**2 + (flight.location.lon - flight_waypoints.next_waypoint.lon)**2)**0.5 < 0.1:
         if (flight_waypoints.current_route_index < len(flight_plan.current_route.waypoints) - 1):
             new_parameters['next_waypoint'] = flight_plan.current_route.waypoints[flight_waypoints.current_route_index + 1]
